@@ -87,7 +87,7 @@ Support for **save version 102** (game version 1.60):
 
 ## Running the tool
 
-1. Start `TS SE Tool\bin\Debug\TS SE Tool.exe`. Start it from its own folder (or a shortcut to it), because it loads its resources from the folder it starts in.
+1. Start `TS SE Tool\bin\Debug\TS SE Tool.exe` (double-click it, or use a shortcut).
 2. Pick your profile and a save.
 3. Click **Load**.
 4. Make your changes.
