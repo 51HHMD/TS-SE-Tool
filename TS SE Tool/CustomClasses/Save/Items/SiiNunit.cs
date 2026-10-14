@@ -19,6 +19,9 @@ namespace TS_SE_Tool.Save.Items
 
         internal List<string> NamelessControlList = new List<string>();
 
+        //Blocks in the order they appear in the save
+        internal List<string> BlockOrder = new List<string>();
+
         internal Economy Economy
         {
             get => (Economy)SiiNitems[EconomyNameless];
@@ -56,6 +59,8 @@ namespace TS_SE_Tool.Save.Items
         {
             string tagLine = "", dataLine = "", nameless = "";
 
+            List<string> blockLines = null;
+
             //block decoding
             for (int line = 0; line < _input.Length; line++)
             {
@@ -76,6 +81,8 @@ namespace TS_SE_Tool.Save.Items
                 nameless = dataLine;
 
                 NamelessControlList.Add(nameless);
+
+                blockLines = null;
 
                 switch (tagLine)
                 {
@@ -418,7 +425,28 @@ namespace TS_SE_Tool.Save.Items
 
                             break;
                         }
-                        
+
+                    case "player_vehicles":
+                        {
+                            SiiNitems.Add(nameless, new Player_Vehicles(GetLines().ToArray()));
+
+                            break;
+                        }
+
+                    case "car_job_log":
+                        {
+                            SiiNitems.Add(nameless, new Car_job_Log(GetLines().ToArray()));
+
+                            break;
+                        }
+
+                    case "car_job_generator":
+                        {
+                            SiiNitems.Add(nameless, new Car_job_Generator(GetLines().ToArray()));
+
+                            break;
+                        }
+
                     default:
                         {
                             List<string> tmpNewBlockLines = GetLines();
@@ -431,6 +459,14 @@ namespace TS_SE_Tool.Save.Items
 
                             break;
                         }
+                }
+
+                if (blockLines != null && SiiNitems.ContainsKey(nameless))
+                {
+                    BlockOrder.Add(nameless);
+
+                    if (SiiNitems[nameless] is SiiNBlockCore block)
+                        block.sourceLines = blockLines;
                 }
 
                 continue;
@@ -451,6 +487,8 @@ namespace TS_SE_Tool.Save.Items
 
                     } while (!_input[line].StartsWith("}"));
 
+                    blockLines = Data;
+
                     return Data;
                 }
                 //===
@@ -465,463 +503,30 @@ namespace TS_SE_Tool.Save.Items
 
             returnSB.AppendLine("SiiNunit" + Environment.NewLine + "{");
 
-            //=== Economy
+            //=== All blocks in original order
 
-            returnSB.AppendLine(Economy.PrintOut(0, EconomyNameless));
-
-            //=== Bank
-
-            returnSB.AppendLine(Bank.PrintOut(0, Economy.bank));
-
-            foreach (string item in Bank.loans.Where(x => x != null && x != "null"))
+            foreach (string item in BlockOrder.Where(x => SiiNitems.ContainsKey(x)))
             {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
+                returnSB.AppendLine(PrintBlock(item));
             }
 
-            //=== Player
-
-            returnSB.AppendLine(Player.PrintOut(0, Economy.player));
-
-            //=== Trailers
-
-            List<string> tmpAccList = new List<string>();
-
-            foreach (string item in Player.trailers.Where(x => x != null && x != "null"))
-            {
-                string trailerNameless = item;
-
-                trStart:;
-
-                Trailer Trailer = SiiNitems[trailerNameless];
-
-                returnSB.AppendLine(Trailer.PrintOut(0, trailerNameless));
-
-                tmpAccList.InsertRange(0, Trailer.accessories);
-
-                if (Trailer.slave_trailer != "null")
-                {
-                    trailerNameless = Trailer.slave_trailer;
-                    goto trStart;
-                }
-
-                foreach (string accNameless in tmpAccList.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[accNameless].PrintOut(0, accNameless));
-                }
-
-                tmpAccList.Clear();
-            }
-
-            foreach (string item in Player.trailer_utilization_logs.Where(x => x != null && x != "null"))
-            {
-                Trailer_Utilization_log Trailer_Utilization_log = SiiNitems[item];
-
-                returnSB.AppendLine(Trailer_Utilization_log.PrintOut(0, item));
-
-                foreach (string item2 in Trailer_Utilization_log.entries.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                }
-            }
-
-            foreach (string item in Player.trailer_defs.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Current job
-
-            if (Player.current_job != "null")
-            {
-                Player_Job Player_Job = SiiNitems[Player.current_job];
-
-                returnSB.AppendLine(Player_Job.PrintOut(0, Player.current_job));
-
-                if (Player_Job.company_truck != "null")
-                {
-                    Vehicle Vehicle = SiiNitems[Player_Job.company_truck];
-
-                    returnSB.AppendLine(Vehicle.PrintOut(0, Player_Job.company_truck));
-
-                    foreach (string accNameless in Vehicle.accessories.Where(x => x != null && x != "null"))
-                    {
-                        returnSB.AppendLine(SiiNitems[accNameless].PrintOut(0, accNameless));
-                    }
-                }
-
-                if (Player_Job.company_trailer != "null")
-                {
-                    string trailerNameless = Player_Job.company_trailer;
-
-                    trStart:;
-
-                    Trailer Trailer = SiiNitems[trailerNameless];
-
-                    returnSB.AppendLine(Trailer.PrintOut(0, trailerNameless));
-
-                    tmpAccList.InsertRange(0, Trailer.accessories);
-
-                    if (Trailer.slave_trailer != "null")
-                    {
-                        trailerNameless = Trailer.slave_trailer;
-                        goto trStart;
-                    }
-
-                    foreach (string accNameless in tmpAccList.Where(x => x != null && x != "null"))
-                    {
-                        returnSB.AppendLine(SiiNitems[accNameless].PrintOut(0, accNameless));
-                    }
-
-                    tmpAccList.Clear();
-                }
-
-                if (Player_Job.special != "null")
-                {
-                    returnSB.AppendLine(SiiNitems[Player_Job.special].PrintOut(0, Player_Job.special));
-                }
-            }
-
-            //=== Selected job
-
-            if (Player.selected_job != "null")
-            {
-                Job_Info Job_Info = SiiNitems[Player.selected_job];
-
-                returnSB.AppendLine(Job_Info.PrintOut(0, Player.selected_job));
-
-                if (Job_Info.special != null)
-                {
-                    returnSB.AppendLine(SiiNitems[Job_Info.special].PrintOut(0, Job_Info.special));
-                }
-            }
-
-            //=== Trucks
-
-            foreach (string item in Player.trucks.Where(x => x != null && x != "null"))
-            {
-                Vehicle Vehicle = SiiNitems[item];
-
-                returnSB.AppendLine(Vehicle.PrintOut(0, item));
-
-                foreach (string accNameless in Vehicle.accessories.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[accNameless].PrintOut(0, accNameless));
-                }
-            }
-
-            //---
-
-            foreach (string item in Player.truck_profit_logs.Where(x => x != null && x != "null"))
-            {
-                Profit_log Profit_log = SiiNitems[item];
-
-                returnSB.AppendLine(Profit_log.PrintOut(0, item));
-
-                foreach (string item2 in Profit_log.stats_data.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                }
-            }
-
-            //=== Drivers
-
-            foreach (string item in Player.drivers.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-
-                if (SiiNitems[item] is Driver_Player)
-                {
-                    Driver_Player Driver_Player = SiiNitems[item];
-
-                    Profit_log Profit_log = SiiNitems[Driver_Player.profit_log];
-
-                    returnSB.AppendLine(Profit_log.PrintOut(0, Driver_Player.profit_log));                    
-
-                    foreach (string item2 in Profit_log.stats_data.Where(x => x != null && x != "null"))
-                    {
-                        returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                    }
-                }
-                else
-                {
-                    Driver_AI Driver_AI = SiiNitems[item];
-
-                    returnSB.AppendLine(SiiNitems[Driver_AI.driver_job].PrintOut(0, Driver_AI.driver_job));
-
-                    Profit_log Profit_log = SiiNitems[Driver_AI.profit_log];
-
-                    returnSB.AppendLine(Profit_log.PrintOut(0, Driver_AI.profit_log));
-
-                    foreach (string item2 in Profit_log.stats_data.Where(x => x != null && x != "null"))
-                    {
-                        returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                    }
-                }
-            }
-
-            //=== Companies
-
-            foreach (string item in Economy.companies.Where(x => x != null && x != "null"))
-            {
-                Company Company = SiiNitems[item];
-
-                returnSB.AppendLine(Company.PrintOut(0, item));
-
-                foreach (string item2 in Company.job_offer.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                }
-            }
-
-            //=== Garages
-
-            foreach (string item in Economy.garages.Where(x => x != null && x != "null"))
-            {
-                Garage Garage = SiiNitems[item];
-
-                returnSB.AppendLine(Garage.PrintOut(0, item));
-
-                Profit_log Profit_log = SiiNitems[Garage.profit_log];
-
-                returnSB.AppendLine(Profit_log.PrintOut(0, Garage.profit_log));
-
-                foreach (string item2 in Profit_log.stats_data.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                }
-            }
-
-            //=== Game Progress
-
-            Game_Progress Game_Progress = SiiNitems[Economy.game_progress];
-
-            returnSB.AppendLine(Game_Progress.PrintOut(0, Economy.game_progress));
-
-            //---
-
-            Transport_Data Transport_Data = SiiNitems[Game_Progress.generic_transports];
-
-            returnSB.AppendLine(Transport_Data.PrintOut(0, Game_Progress.generic_transports));
-
-            //---
-
-            Transport_Data = SiiNitems[Game_Progress.undamaged_transports];
-
-            returnSB.AppendLine(Transport_Data.PrintOut(0, Game_Progress.undamaged_transports));
-
-            //---
-
-            Transport_Data = SiiNitems[Game_Progress.clean_transports];
-
-            returnSB.AppendLine(Transport_Data.PrintOut(0, Game_Progress.clean_transports));
-
-            //=== Economy event Queue
-
-            returnSB.AppendLine(Economy_event_Queue.PrintOut(0, Economy.event_queue));
-
-            foreach (string item in Economy_event_Queue.data.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Mail Control
-
-            Mail_Ctrl Mail_Ctrl = SiiNitems[Economy.mail_ctrl];
-
-            returnSB.AppendLine(Mail_Ctrl.PrintOut(0, Economy.mail_ctrl));
-
-            foreach (string item in Mail_Ctrl.inbox.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Oversize offer
-
-            Oversize_offer_Ctrl Oversize_offer_Ctrl = SiiNitems[Economy.oversize_offer_ctrl];
-
-            returnSB.AppendLine(Oversize_offer_Ctrl.PrintOut(0, Economy.oversize_offer_ctrl));
-
-            foreach (string item in Oversize_offer_Ctrl.route_offers.Where(x => x != null && x != "null"))
-            {
-                Oversize_Route_offers Oversize_Route_offers = SiiNitems[item];
-
-                returnSB.AppendLine(Oversize_Route_offers.PrintOut(0, item));
-
-                foreach (string item2 in Oversize_Route_offers.offers.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item2].PrintOut(0, item2));
-                }
-            }
-
-            //=== Delivery log
-
-            Delivery_log Delivery_log = SiiNitems[Economy.delivery_log];
-
-            returnSB.AppendLine(Delivery_log.PrintOut(0, Economy.delivery_log));
-
-            foreach (string item in Delivery_log.entries.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Ferry log
-
-            if (SiiNitems.ContainsKey(Economy.ferry_log))
-            {
-                Ferry_log Ferry_log = SiiNitems[Economy.ferry_log];
-
-                returnSB.AppendLine(Ferry_log.PrintOut(0, Economy.ferry_log));
-
-                foreach (string item in Ferry_log.entries.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-                }
-            }
-
-            //=== GPS Online
-
-            foreach (string item in Economy.stored_online_gps_behind_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            foreach (string item in Economy.stored_online_gps_ahead_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            foreach (string item in Economy.stored_online_gps_avoid_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Special job
-
-            if (Economy.stored_special_job != "null")
-            {
-                Oversize_Job_save Oversize_Job_save = SiiNitems[Economy.stored_special_job];
-
-                returnSB.AppendLine(Oversize_Job_save.PrintOut(0, Economy.stored_special_job));
-
-                foreach (string item in Oversize_Job_save.trajectory_orders.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-                }
-
-                foreach (string item in Oversize_Job_save.active_blocks_rules.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-                }
-            }
-
-            //=== Police Control
-
-            returnSB.AppendLine(SiiNitems[Economy.police_ctrl].PrintOut(0, Economy.police_ctrl));
-
-            //=== GPS
-
-            foreach (string item in Economy.stored_gps_behind_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            foreach (string item in Economy.stored_gps_ahead_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            foreach (string item in Economy.stored_gps_avoid_waypoints.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Stored Map actions
-
-            foreach (string item in Economy.stored_map_actions.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== AI Drivers offer
-
-            List<string> AI_Drivers = new List<string>();
-
-            AI_Drivers.AddRange(Economy.drivers_offer);
-            AI_Drivers.AddRange(Economy.driver_pool);
-
-            foreach (string item in AI_Drivers.Where(x => x != null && x != "null"))
-            {
-                Driver_AI Driver_AI = SiiNitems[item];
-
-                returnSB.AppendLine(Driver_AI.PrintOut(0, item));
-
-                //
-
-                string jobNameless = Driver_AI.driver_job;
-
-                returnSB.AppendLine(SiiNitems[jobNameless].PrintOut(0, jobNameless));
-
-                //
-
-                string logNameless = Driver_AI.profit_log;
-
-                Profit_log Profit_log = SiiNitems[logNameless];
-
-                returnSB.AppendLine(Profit_log.PrintOut(0, logNameless));
-
-                foreach (string statNameless in Profit_log.stats_data.Where(x => x != null && x != "null"))
-                {
-                    returnSB.AppendLine(SiiNitems[statNameless].PrintOut(0, statNameless));
-                }
-            }
-
-            //=== Registry
-
-            returnSB.AppendLine(SiiNitems[Economy.registry].PrintOut(0, Economy.registry));
-
-            //=== Bus stops
-
-            foreach (string item in Economy.bus_stops.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Bus job Log
-
-            Bus_job_Log Bus_job_Log = SiiNitems[Economy.bus_job_log];
-
-            returnSB.AppendLine(Bus_job_Log.PrintOut(0, Economy.bus_job_log));
-
-            foreach (string item in Bus_job_Log.entries.Where(x => x != null && x != "null"))
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Unidentified blocks
-
-            foreach (string item in UnidentifiedBlocks)
-            {
-                returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-            }
-
-            //=== Skipped blocks
-
-            if (NamelessControlList.Count > 0)
-            {
-                List<string> skippedBlocks = new List<string>();
-                skippedBlocks.AddRange(NamelessControlList);
-
-                foreach (string item in skippedBlocks)
-                {
-                    returnSB.AppendLine(SiiNitems[item].PrintOut(0, item));
-                }
-            }
-            
             returnSB.Append("}");
 
             returnString = returnSB.ToString();
 
             return returnString;
+        }
+
+        private string PrintBlock(string _nameless)
+        {
+            dynamic block = SiiNitems[_nameless];
+
+            string generated = block.PrintOut(0, _nameless);
+
+            if (block is Unidentified)
+                return generated;
+
+            return ((SiiNBlockCore)block).MergeWithSource(generated);
         }
 
     }

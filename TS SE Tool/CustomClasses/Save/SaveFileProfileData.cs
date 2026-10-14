@@ -83,6 +83,8 @@ namespace TS_SE_Tool
 
         private string[] user_data_array;
 
+        private HashSet<int> unparsedUserData = new HashSet<int>();
+
         private string user_data_0
         {
             get {
@@ -108,7 +110,7 @@ namespace TS_SE_Tool
             get { return (!string.IsNullOrEmpty(ud2_SomeCheckSum) ? ud2_SomeCheckSum : "\"\""); }
             set
             {
-                ud2_SomeCheckSum = (value != "\"\"") ? value.Trim(charsToTrim) : "";
+                ud2_SomeCheckSum = (value != "\"\"") ? value : ""; //raw, written back as is
             }
         }
 
@@ -188,7 +190,7 @@ namespace TS_SE_Tool
         {
             get
             {
-                return (!string.IsNullOrEmpty(ud15_SomeUserData) ? "\"" + ud11_CurrentTruck + "\"" : "\"\"");
+                return (!string.IsNullOrEmpty(ud11_CurrentTruck) ? "\"" + ud11_CurrentTruck + "\"" : "\"\"");
             }
             set
             {
@@ -213,7 +215,7 @@ namespace TS_SE_Tool
             }
             set
             {
-                ud13_SomeUserData = value.Trim(charsToTrim);
+                ud13_SomeUserData = (value != "\"\"") ? value : ""; //raw, written back as is
             }
         }
 
@@ -233,7 +235,7 @@ namespace TS_SE_Tool
                 return (!string.IsNullOrEmpty(ud15_SomeUserData) ? ud15_SomeUserData : "\"\""); }
             set
             {
-                ud15_SomeUserData = value.Trim(charsToTrim);
+                ud15_SomeUserData = (value != "\"\"") ? value : ""; //raw, written back as is
             }
         }
 
@@ -491,20 +493,38 @@ namespace TS_SE_Tool
 
                             user_data_array = new string[UserDataSize];
 
-                            for (int i = 0; i < UserDataSize; i++)
+                            //read only lines which are present, any count
+                            while (lineNumber + 1 < _fileLines.Length && _fileLines[lineNumber + 1].Trim().StartsWith("user_data["))
                             {
                                 lineNumber++;
                                 lineParts = _fileLines[lineNumber].Split(new char[] { ':' }, 2);
 
-                                string udNumber = lineParts[0].Split(new char[] { '[', ']' }, 3)[1];
-                                string udValue = lineParts[1].Trim();
+                                int udIndex = int.Parse(lineParts[0].Split(new char[] { '[', ']' }, 3)[1]);
+                                string udValue = lineParts.Length > 1 ? lineParts[1].Trim() : "\"\"";
 
-                                string propertyName = "user_data_" + i.ToString();
+                                if (udIndex >= user_data_array.Length)
+                                {
+                                    Array.Resize(ref user_data_array, udIndex + 1);
+                                    UserDataSize = (uint)user_data_array.Length;
+                                }
+
+                                user_data_array[udIndex] = udValue;
+
+                                string propertyName = "user_data_" + udIndex.ToString();
 
                                 if (this.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic) != null)
-                                    this[propertyName] = udValue;
-
-                                user_data_array[int.Parse(udNumber)] = udValue;
+                                {
+                                    try
+                                    {
+                                        this[propertyName] = udValue;
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        //keep raw value on write
+                                        unparsedUserData.Add(udIndex);
+                                        IO_Utilities.ErrorLogWriter((ex.InnerException ?? ex).Message + Environment.NewLine + "savefileprofiledata | user_data[" + udIndex + "] = " + udValue);
+                                    }
+                                }
                             }
                             break;
                         }
@@ -628,10 +648,10 @@ namespace TS_SE_Tool
                 {
                     string propertyName = "user_data_" + i.ToString();
 
-                    if (this.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic) != null)
+                    if (!unparsedUserData.Contains(i) && this.GetType().GetProperty(propertyName, BindingFlags.Instance | BindingFlags.NonPublic) != null)
                         sbResult.AppendLine(" user_data[" + i.ToString() + "]: " + this[propertyName]);
-                    else                    
-                        sbResult.AppendLine(user_data_array[i]);                    
+                    else
+                        sbResult.AppendLine(" user_data[" + i.ToString() + "]: " + (user_data_array[i] ?? "\"\""));
                 }
 
             sbResult.AppendLine(" active_mods: " + ActiveMods.Capacity.ToString());

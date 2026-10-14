@@ -29,7 +29,7 @@ namespace TS_SE_Tool.Save.Items
 
         internal SCS_Float game_time_secs { get; set; } = 0;
 
-        internal int game_time_initial { get; set; } = 0;
+        internal int? game_time_initial { get; set; } = 0; //null = nil
         internal int achievements_added { get; set; } = 0;
 
         internal bool new_game { get; set; } = false;
@@ -46,10 +46,18 @@ namespace TS_SE_Tool.Save.Items
 
         internal byte[] _playerSkills { get; set; } = new byte[6] { 0, 0, 0, 0, 0, 0 };
 
+        internal byte long_duty { get; set; } = 0;
+        internal byte tight_schedule { get; set; } = 0;
+        internal byte satisfaction_decrease { get; set; } = 0;
+        internal byte low_acceleration { get; set; } = 0;
+        internal byte satisfaction_increase { get; set; } = 0;
+        internal byte ecodriving { get; set; } = 0;
+
         internal List<SCS_Color> user_colors = new List<SCS_Color>();
 
         internal string delivery_log { get; set; } = "";
         internal string ferry_log { get; set; } = "";
+        internal string police_offence_log { get; set; } = "";
 
         internal int stored_camera_mode { get; set; } = 0;
         internal int stored_actor_state { get; set; } = 0;
@@ -60,6 +68,8 @@ namespace TS_SE_Tool.Save.Items
         internal int stored_actor_wiper_mode { get; set; } = 0;
         internal int stored_actor_retarder { get; set; } = 0;
         internal int stored_display_mode { get; set; } = 0;
+        internal int stored_display_mode_on_dashboard { get; set; } = 0;
+        internal int stored_display_mode_on_gps { get; set; } = 0;
         internal int stored_dashboard_map_mode { get; set; } = 0;
         internal int stored_world_map_zoom { get; set; } = 0;
         internal int stored_online_job_id { get; set; } = 0;
@@ -69,6 +79,7 @@ namespace TS_SE_Tool.Save.Items
         internal List<string> stored_online_gps_behind_waypoints { get; set; } = new List<string>();
         internal List<string> stored_online_gps_ahead_waypoints { get; set; } = new List<string>();
         internal List<string> stored_online_gps_avoid_waypoints { get; set; } = new List<string>();
+        internal List<string> stored_online_gps_waypoints_history { get; set; } = new List<string>();
 
         internal string stored_special_job { get; set; } = "";
 
@@ -100,6 +111,7 @@ namespace TS_SE_Tool.Save.Items
         internal List<string> stored_gps_behind_waypoints { get; set; } = new List<string>();
         internal List<string> stored_gps_ahead_waypoints { get; set; } = new List<string>();
         internal List<string> stored_gps_avoid_waypoints { get; set; } = new List<string>();
+        internal List<string> stored_gps_waypoints_history { get; set; } = new List<string>();
 
         internal Vector_3i stored_start_tollgate_pos { get; set; } = new Vector_3i();
 
@@ -117,6 +129,10 @@ namespace TS_SE_Tool.Save.Items
 
         internal SCS_Float real_time_seconds { get; set; } = 0;
 
+        internal List<int> total_distances_by_mode { get; set; } = new List<int>();
+        internal List<int> total_real_times_by_mode { get; set; } = new List<int>();
+        internal List<int> total_game_times_by_mode { get; set; } = new List<int>();
+
         internal List<string> visited_cities { get; set; } = new List<string>();
         internal List<int> visited_cities_count { get; set; } = new List<int>();
 
@@ -124,6 +140,9 @@ namespace TS_SE_Tool.Save.Items
 
         internal List<UInt64> discovered_cutscene_items { get; set; } = new List<UInt64>();
         internal List<int> discovered_cutscene_items_states { get; set; } = new List<int>();
+
+        internal List<string> tourist_atlas_log_units { get; set; } = new List<string>();
+        internal List<string> tourist_atlas_log_flags { get; set; } = new List<string>();
 
         internal List<string> unlocked_dealers { get; set; } = new List<string>();
         internal List<string> unlocked_recruitments { get; set; } = new List<string>();
@@ -155,12 +174,17 @@ namespace TS_SE_Tool.Save.Items
 
         internal List<string> drivers_offer { get; set; } = new List<string>();
 
+        internal string default_training_policy { get; set; } = "";
+
+        internal string used_vehicle_assortment { get; set; } = "";
+
         internal string freelance_truck_offer { get; set; } = "";
 
         internal int trucks_bought_online { get; set; } = 0;
         internal int special_cargo_timer { get; set; } = 0;
 
         internal List<string> screen_access_list { get; set; } = new List<string>();
+        internal List<string> screen_visit_list { get; set; } = new List<string>();
         internal List<string> driver_pool { get; set; } = new List<string>();
 
         internal string registry { get; set; } = "";
@@ -170,6 +194,9 @@ namespace TS_SE_Tool.Save.Items
         internal UInt64 company_check_hash { get; set; } = 0;
 
         internal List<int> relations { get; set; } = new List<int>();
+
+        internal string car_job_log { get; set; } = "";
+        internal string car_job_generator { get; set; } = "";
 
         internal List<string> bus_stops { get; set; } = new List<string>();
 
@@ -303,7 +330,7 @@ namespace TS_SE_Tool.Save.Items
 
                         case "game_time_initial":
                             {
-                                game_time_initial = int.Parse(dataLine);
+                                game_time_initial = dataLine == "nil" ? (int?)null : int.Parse(dataLine);
                                 break;
                             }
 
@@ -1068,12 +1095,186 @@ namespace TS_SE_Tool.Save.Items
                                 bus_playing_time = int.Parse(dataLine);
                                 break;
                             }
+
+                        case "long_duty":
+                            {
+                                long_duty = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "tight_schedule":
+                            {
+                                tight_schedule = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "satisfaction_decrease":
+                            {
+                                satisfaction_decrease = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "low_acceleration":
+                            {
+                                low_acceleration = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "satisfaction_increase":
+                            {
+                                satisfaction_increase = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "ecodriving":
+                            {
+                                ecodriving = byte.Parse(dataLine);
+                                break;
+                            }
+
+                        case "police_offence_log":
+                            {
+                                police_offence_log = dataLine;
+                                break;
+                            }
+
+                        case "stored_display_mode_on_dashboard":
+                            {
+                                stored_display_mode_on_dashboard = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "stored_display_mode_on_gps":
+                            {
+                                stored_display_mode_on_gps = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "stored_online_gps_waypoints_history":
+                            {
+                                stored_online_gps_waypoints_history.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("stored_online_gps_waypoints_history["):
+                            {
+                                stored_online_gps_waypoints_history.Add(dataLine);
+                                break;
+                            }
+
+                        case "stored_gps_waypoints_history":
+                            {
+                                stored_gps_waypoints_history.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("stored_gps_waypoints_history["):
+                            {
+                                stored_gps_waypoints_history.Add(dataLine);
+                                break;
+                            }
+
+                        case "tourist_atlas_log_units":
+                            {
+                                tourist_atlas_log_units.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("tourist_atlas_log_units["):
+                            {
+                                tourist_atlas_log_units.Add(dataLine);
+                                break;
+                            }
+
+                        case "tourist_atlas_log_flags":
+                            {
+                                tourist_atlas_log_flags.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("tourist_atlas_log_flags["):
+                            {
+                                tourist_atlas_log_flags.Add(dataLine);
+                                break;
+                            }
+
+                        case "default_training_policy":
+                            {
+                                default_training_policy = dataLine;
+                                break;
+                            }
+
+                        case "used_vehicle_assortment":
+                            {
+                                used_vehicle_assortment = dataLine;
+                                break;
+                            }
+
+                        case "screen_visit_list":
+                            {
+                                screen_visit_list.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("screen_visit_list["):
+                            {
+                                screen_visit_list.Add(dataLine);
+                                break;
+                            }
+
+                        case "total_distances_by_mode":
+                            {
+                                total_distances_by_mode.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("total_distances_by_mode["):
+                            {
+                                total_distances_by_mode.Add(int.Parse(dataLine));
+                                break;
+                            }
+
+                        case "total_real_times_by_mode":
+                            {
+                                total_real_times_by_mode.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("total_real_times_by_mode["):
+                            {
+                                total_real_times_by_mode.Add(int.Parse(dataLine));
+                                break;
+                            }
+
+                        case "total_game_times_by_mode":
+                            {
+                                total_game_times_by_mode.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("total_game_times_by_mode["):
+                            {
+                                total_game_times_by_mode.Add(int.Parse(dataLine));
+                                break;
+                            }
+
+                        case "car_job_log":
+                            {
+                                car_job_log = dataLine;
+                                break;
+                            }
+
+                        case "car_job_generator":
+                            {
+                                car_job_generator = dataLine;
+                                break;
+                            }
                     }
                 }
                 catch (Exception ex)
                 {
                     Utilities.IO_Utilities.ErrorLogWriter(ex.Message + Environment.NewLine + this.GetType().Name.ToLower() + " | " + tagLine + " = " + dataLine);
-                    break;
+                    this.markUnparsed(tagLine);
                 }
                 //Populate helping variables
                 setPlayerSkillsArray();
@@ -1122,7 +1323,7 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" game_time: " + game_time.ToString());
             returnSB.AppendLine(" game_time_secs: " + game_time_secs.ToString());
 
-            returnSB.AppendLine(" game_time_initial: " + game_time_initial.ToString());
+            returnSB.AppendLine(" game_time_initial: " + (game_time_initial.HasValue ? game_time_initial.Value.ToString() : "nil"));
 
             returnSB.AppendLine(" achievements_added: " + achievements_added.ToString());
 
@@ -1138,6 +1339,12 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" fragile: " + fragile.ToString());
             returnSB.AppendLine(" urgent: " + urgent.ToString());
             returnSB.AppendLine(" mechanical: " + mechanical.ToString());
+            returnSB.AppendLine(" long_duty: " + long_duty.ToString());
+            returnSB.AppendLine(" tight_schedule: " + tight_schedule.ToString());
+            returnSB.AppendLine(" satisfaction_decrease: " + satisfaction_decrease.ToString());
+            returnSB.AppendLine(" low_acceleration: " + low_acceleration.ToString());
+            returnSB.AppendLine(" satisfaction_increase: " + satisfaction_increase.ToString());
+            returnSB.AppendLine(" ecodriving: " + ecodriving.ToString());
 
             returnSB.AppendLine(" user_colors: " + user_colors.Count);
             for (int i = 0; i < user_colors.Count; i++)
@@ -1145,6 +1352,7 @@ namespace TS_SE_Tool.Save.Items
 
             returnSB.AppendLine(" delivery_log: " + delivery_log);
             returnSB.AppendLine(" ferry_log: " + ferry_log);
+            returnSB.AppendLine(" police_offence_log: " + police_offence_log);
 
             returnSB.AppendLine(" stored_camera_mode: " + stored_camera_mode.ToString());
             returnSB.AppendLine(" stored_actor_state: " + stored_actor_state.ToString());
@@ -1154,6 +1362,8 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" stored_actor_retarder: " + stored_actor_retarder.ToString());
 
             returnSB.AppendLine(" stored_display_mode: " + stored_display_mode.ToString());
+            returnSB.AppendLine(" stored_display_mode_on_dashboard: " + stored_display_mode_on_dashboard.ToString());
+            returnSB.AppendLine(" stored_display_mode_on_gps: " + stored_display_mode_on_gps.ToString());
             returnSB.AppendLine(" stored_dashboard_map_mode: " + stored_dashboard_map_mode.ToString());
             returnSB.AppendLine(" stored_world_map_zoom: " + stored_world_map_zoom.ToString());
 
@@ -1178,6 +1388,10 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" stored_online_gps_avoid_waypoints: " + stored_online_gps_avoid_waypoints.Count);
             for (int i = 0; i < stored_online_gps_avoid_waypoints.Count; i++)
                 returnSB.AppendLine(" stored_online_gps_avoid_waypoints[" + i + "]: " + stored_online_gps_avoid_waypoints[i].ToString());
+
+            returnSB.AppendLine(" stored_online_gps_waypoints_history: " + stored_online_gps_waypoints_history.Count);
+            for (int i = 0; i < stored_online_gps_waypoints_history.Count; i++)
+                returnSB.AppendLine(" stored_online_gps_waypoints_history[" + i + "]: " + stored_online_gps_waypoints_history[i]);
 
             returnSB.AppendLine(" stored_special_job: " + stored_special_job);
             returnSB.AppendLine(" police_ctrl: " + police_ctrl);
@@ -1221,6 +1435,10 @@ namespace TS_SE_Tool.Save.Items
             for (int i = 0; i < stored_gps_avoid_waypoints.Count; i++)
                 returnSB.AppendLine(" stored_gps_avoid_waypoints[" + i + "]: " + stored_gps_avoid_waypoints[i].ToString());
 
+            returnSB.AppendLine(" stored_gps_waypoints_history: " + stored_gps_waypoints_history.Count);
+            for (int i = 0; i < stored_gps_waypoints_history.Count; i++)
+                returnSB.AppendLine(" stored_gps_waypoints_history[" + i + "]: " + stored_gps_waypoints_history[i]);
+
             returnSB.AppendLine(" stored_start_tollgate_pos: " + stored_start_tollgate_pos.ToString());
 
             returnSB.AppendLine(" stored_tutorial_state: " + stored_tutorial_state.ToString());
@@ -1239,6 +1457,18 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" total_real_time: " + total_real_time.ToString());
             returnSB.AppendLine(" real_time_seconds: " + real_time_seconds.ToString());
 
+            returnSB.AppendLine(" total_distances_by_mode: " + total_distances_by_mode.Count);
+            for (int i = 0; i < total_distances_by_mode.Count; i++)
+                returnSB.AppendLine(" total_distances_by_mode[" + i + "]: " + total_distances_by_mode[i].ToString());
+
+            returnSB.AppendLine(" total_real_times_by_mode: " + total_real_times_by_mode.Count);
+            for (int i = 0; i < total_real_times_by_mode.Count; i++)
+                returnSB.AppendLine(" total_real_times_by_mode[" + i + "]: " + total_real_times_by_mode[i].ToString());
+
+            returnSB.AppendLine(" total_game_times_by_mode: " + total_game_times_by_mode.Count);
+            for (int i = 0; i < total_game_times_by_mode.Count; i++)
+                returnSB.AppendLine(" total_game_times_by_mode[" + i + "]: " + total_game_times_by_mode[i].ToString());
+
             returnSB.AppendLine(" visited_cities: " + visited_cities.Count);
             for (int i = 0; i < visited_cities.Count; i++)
                 returnSB.AppendLine(" visited_cities[" + i + "]: " + visited_cities[i]);
@@ -1256,6 +1486,14 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" discovered_cutscene_items_states: " + discovered_cutscene_items_states.Count);
             for (int i = 0; i < discovered_cutscene_items_states.Count; i++)
                 returnSB.AppendLine(" discovered_cutscene_items_states[" + i + "]: " + discovered_cutscene_items_states[i].ToString());
+
+            returnSB.AppendLine(" tourist_atlas_log_units: " + tourist_atlas_log_units.Count);
+            for (int i = 0; i < tourist_atlas_log_units.Count; i++)
+                returnSB.AppendLine(" tourist_atlas_log_units[" + i + "]: " + tourist_atlas_log_units[i]);
+
+            returnSB.AppendLine(" tourist_atlas_log_flags: " + tourist_atlas_log_flags.Count);
+            for (int i = 0; i < tourist_atlas_log_flags.Count; i++)
+                returnSB.AppendLine(" tourist_atlas_log_flags[" + i + "]: " + tourist_atlas_log_flags[i]);
 
             returnSB.AppendLine(" unlocked_dealers: " + unlocked_dealers.Count);
             for (int i = 0; i < unlocked_dealers.Count; i++)
@@ -1302,6 +1540,9 @@ namespace TS_SE_Tool.Save.Items
             for (int i = 0; i < drivers_offer.Count; i++)
                 returnSB.AppendLine(" drivers_offer[" + i + "]: " + drivers_offer[i]);
 
+            returnSB.AppendLine(" default_training_policy: " + default_training_policy);
+            returnSB.AppendLine(" used_vehicle_assortment: " + used_vehicle_assortment);
+
             returnSB.AppendLine(" freelance_truck_offer: " + freelance_truck_offer);
 
             returnSB.AppendLine(" trucks_bought_online: " + trucks_bought_online.ToString());
@@ -1310,6 +1551,10 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" screen_access_list: " + screen_access_list.Count);
             for (int i = 0; i < screen_access_list.Count; i++)
                 returnSB.AppendLine(" screen_access_list[" + i + "]: " + screen_access_list[i]);
+
+            returnSB.AppendLine(" screen_visit_list: " + screen_visit_list.Count);
+            for (int i = 0; i < screen_visit_list.Count; i++)
+                returnSB.AppendLine(" screen_visit_list[" + i + "]: " + screen_visit_list[i]);
 
             returnSB.AppendLine(" driver_pool: " + driver_pool.Count);
             for (int i = 0; i < driver_pool.Count; i++)
@@ -1324,6 +1569,9 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" relations: " + relations.Count);
             for (int i = 0; i < relations.Count; i++)
                 returnSB.AppendLine(" relations[" + i + "]: " + relations[i].ToString());
+
+            returnSB.AppendLine(" car_job_log: " + car_job_log);
+            returnSB.AppendLine(" car_job_generator: " + car_job_generator);
 
             returnSB.AppendLine(" bus_stops: " + bus_stops.Count);
             for (int i = 0; i < bus_stops.Count; i++)

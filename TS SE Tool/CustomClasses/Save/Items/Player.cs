@@ -15,6 +15,36 @@ namespace TS_SE_Tool.Save.Items
         #region variables
         internal string hq_city { get; set; } = "";
 
+        internal string my_vehicles_mode { get; set; } = "";
+
+        internal List<string> my_vehicles { get; set; } = new List<string>();
+
+        internal string assigned_vehicles_mode { get; set; } = "";
+
+        internal string assigned_vehicles { get; set; } = "";
+
+        internal List<string> buses { get; set; } = new List<string>();
+
+        internal List<string> cars { get; set; } = new List<string>();
+
+        internal bool schedule_quick_travel { get; set; } = false;
+
+        internal int vehicle_mode_flags { get; set; } = 0;
+
+        internal string current_car_job { get; set; } = "";
+
+        internal string selected_bus_offer { get; set; } = "";
+
+        internal int last_sleep_time { get; set; } = 0;
+
+        internal int time_since_mandatory_break { get; set; } = 0;
+
+        internal int on_break_time { get; set; } = 0;
+
+        internal List<int> driver_flags { get; set; } = new List<int>();
+
+        internal List<int> driver_undrivable_truck_timers { get; set; } = new List<int>();
+
         internal List<string> trailers { get; set; } = new List<string>();
 
         internal List<string> trailer_utilization_logs { get; set; } = new List<string>();
@@ -369,12 +399,139 @@ namespace TS_SE_Tool.Save.Items
                                 driver_quit_warned.Add(bool.Parse(dataLine));
                                 break;
                             }
+
+                        case "my_vehicles_mode":
+                            {
+                                my_vehicles_mode = dataLine;
+                                break;
+                            }
+
+                        case "my_vehicles":
+                            {
+                                my_vehicles.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("my_vehicles["):
+                            {
+                                my_vehicles.Add(dataLine);
+                                break;
+                            }
+
+                        case "assigned_vehicles_mode":
+                            {
+                                assigned_vehicles_mode = dataLine;
+                                break;
+                            }
+
+                        case "assigned_vehicles":
+                            {
+                                assigned_vehicles = dataLine;
+                                break;
+                            }
+
+                        case var s when s.StartsWith("assigned_vehicles["):
+                            {
+                                //array form not seen yet - keep source lines
+                                this.markUnparsed(tagLine);
+                                break;
+                            }
+
+                        case "buses":
+                            {
+                                buses.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("buses["):
+                            {
+                                buses.Add(dataLine);
+                                break;
+                            }
+
+                        case "cars":
+                            {
+                                cars.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("cars["):
+                            {
+                                cars.Add(dataLine);
+                                break;
+                            }
+
+                        case "schedule_quick_travel":
+                            {
+                                schedule_quick_travel = bool.Parse(dataLine);
+                                break;
+                            }
+
+                        case "vehicle_mode_flags":
+                            {
+                                vehicle_mode_flags = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "current_car_job":
+                            {
+                                current_car_job = dataLine;
+                                break;
+                            }
+
+                        case "selected_bus_offer":
+                            {
+                                selected_bus_offer = dataLine;
+                                break;
+                            }
+
+                        case "last_sleep_time":
+                            {
+                                last_sleep_time = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "time_since_mandatory_break":
+                            {
+                                time_since_mandatory_break = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "on_break_time":
+                            {
+                                on_break_time = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case "driver_flags":
+                            {
+                                driver_flags.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("driver_flags["):
+                            {
+                                driver_flags.Add(int.Parse(dataLine));
+                                break;
+                            }
+
+                        case "driver_undrivable_truck_timers":
+                            {
+                                driver_undrivable_truck_timers.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("driver_undrivable_truck_timers["):
+                            {
+                                driver_undrivable_truck_timers.Add(int.Parse(dataLine));
+                                break;
+                            }
                     }
                 }
                 catch (Exception ex)
                 {
                     Utilities.IO_Utilities.ErrorLogWriter(ex.Message + Environment.NewLine + this.GetType().Name.ToLower() + " | " + tagLine + " = " + dataLine);
-                    break;
+                    this.markUnparsed(tagLine);
                 }
             }
         }
@@ -394,6 +551,15 @@ namespace TS_SE_Tool.Save.Items
 
             returnSB.AppendLine(" hq_city: " + hq_city);
 
+            returnSB.AppendLine(" my_vehicles_mode: " + my_vehicles_mode);
+
+            returnSB.AppendLine(" my_vehicles: " + my_vehicles.Count);
+            for (int i = 0; i < my_vehicles.Count; i++)
+                returnSB.AppendLine(" my_vehicles[" + i + "]: " + my_vehicles[i]);
+
+            returnSB.AppendLine(" assigned_vehicles_mode: " + assigned_vehicles_mode);
+            returnSB.AppendLine(" assigned_vehicles: " + assigned_vehicles);
+
             returnSB.AppendLine(" trailers: " + trailers.Count);
             for (int i = 0; i < trailers.Count; i++)
                 returnSB.AppendLine(" trailers[" + i + "]: " + trailers[i]);
@@ -405,6 +571,14 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" trailer_defs: " + trailer_defs.Count);
             for (int i = 0; i < trailer_defs.Count; i++)
                 returnSB.AppendLine(" trailer_defs[" + i + "]: " + trailer_defs[i]);
+
+            returnSB.AppendLine(" buses: " + buses.Count);
+            for (int i = 0; i < buses.Count; i++)
+                returnSB.AppendLine(" buses[" + i + "]: " + buses[i]);
+
+            returnSB.AppendLine(" cars: " + cars.Count);
+            for (int i = 0; i < cars.Count; i++)
+                returnSB.AppendLine(" cars[" + i + "]: " + cars[i]);
 
             returnSB.AppendLine(" assigned_truck: " + assigned_truck);
             returnSB.AppendLine(" my_truck: " + my_truck);
@@ -421,12 +595,19 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" trailer_placement: " + trailer_placement.ToString());
             returnSB.AppendLine(" slave_trailer_placements: " + slave_trailer_placements.ToString());
             returnSB.AppendLine(" schedule_transfer_to_hq: " + schedule_transfer_to_hq.ToString().ToLower());
+            returnSB.AppendLine(" schedule_quick_travel: " + schedule_quick_travel.ToString().ToLower());
             returnSB.AppendLine(" flags: " + flags.ToString());
+            returnSB.AppendLine(" vehicle_mode_flags: " + vehicle_mode_flags.ToString());
             returnSB.AppendLine(" gas_pump_money_debt: " + gas_pump_money_debt.ToString());
             returnSB.AppendLine(" current_job: " + current_job);
             returnSB.AppendLine(" current_bus_job: " + current_bus_job);
+            returnSB.AppendLine(" current_car_job: " + current_car_job);
             returnSB.AppendLine(" selected_job: " + selected_job);
+            returnSB.AppendLine(" selected_bus_offer: " + selected_bus_offer);
             returnSB.AppendLine(" driving_time: " + driving_time.ToString());
+            returnSB.AppendLine(" last_sleep_time: " + last_sleep_time.ToString());
+            returnSB.AppendLine(" time_since_mandatory_break: " + time_since_mandatory_break.ToString());
+            returnSB.AppendLine(" on_break_time: " + on_break_time.ToString());
             returnSB.AppendLine(" sleeping_count: " + sleeping_count.ToString());
             returnSB.AppendLine(" free_roam_distance: " + free_roam_distance.ToString());
             returnSB.AppendLine(" discovary_distance: " + discovary_distance.ToString());
@@ -447,9 +628,17 @@ namespace TS_SE_Tool.Save.Items
             for (int i = 0; i < drivers.Count; i++)
                 returnSB.AppendLine(" drivers[" + i + "]: " + drivers[i]);
 
+            returnSB.AppendLine(" driver_flags: " + driver_flags.Count);
+            for (int i = 0; i < driver_flags.Count; i++)
+                returnSB.AppendLine(" driver_flags[" + i + "]: " + driver_flags[i].ToString());
+
             returnSB.AppendLine(" driver_readiness_timer: " + driver_readiness_timer.Count);
             for (int i = 0; i < driver_readiness_timer.Count; i++)
                 returnSB.AppendLine(" driver_readiness_timer[" + i + "]: " + driver_readiness_timer[i].ToString());
+
+            returnSB.AppendLine(" driver_undrivable_truck_timers: " + driver_undrivable_truck_timers.Count);
+            for (int i = 0; i < driver_undrivable_truck_timers.Count; i++)
+                returnSB.AppendLine(" driver_undrivable_truck_timers[" + i + "]: " + driver_undrivable_truck_timers[i].ToString());
 
             returnSB.AppendLine(" driver_quit_warned: " + driver_quit_warned.Count);
             for (int i = 0; i < driver_quit_warned.Count; i++)

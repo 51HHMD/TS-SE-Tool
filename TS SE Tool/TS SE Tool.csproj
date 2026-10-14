@@ -147,6 +147,9 @@
     <Compile Include="CustomClasses\Save\Items\Bank.cs" />
     <Compile Include="CustomClasses\Save\Items\Bank_Loan.cs" />
     <Compile Include="CustomClasses\Save\Items\Bus_job_Log.cs" />
+    <Compile Include="CustomClasses\Save\Items\Car_job_Generator.cs" />
+    <Compile Include="CustomClasses\Save\Items\Car_job_Log.cs" />
+    <Compile Include="CustomClasses\Save\Items\Player_Vehicles.cs" />
     <Compile Include="CustomClasses\Save\Items\Bus_stop.cs" />
     <Compile Include="CustomClasses\Save\Items\Company.cs" />
     <Compile Include="CustomClasses\Save\Items\Delivery_log.cs" />

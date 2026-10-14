@@ -61,7 +61,7 @@ namespace TS_SE_Tool.Save.Items
                 catch (Exception ex)
                 {
                     Utilities.IO_Utilities.ErrorLogWriter(ex.Message + Environment.NewLine + this.GetType().Name.ToLower() + " | " + tagLine + " = " + dataLine);
-                    break;
+                    this.markUnparsed(tagLine);
                 }
             }
         }

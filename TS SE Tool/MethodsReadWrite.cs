@@ -961,11 +961,17 @@ namespace TS_SE_Tool
 
                 PrintAddedJobs();
 
-                //Write
-                using (StreamWriter writer = new StreamWriter(SiiSavePath, false))
+                //Write - build output first so an error can't leave game.sii truncated
+                string saveContent = SiiNunitData.PrintOut(0);
+                string tempSavePath = SiiSavePath + ".tmp";
+
+                using (StreamWriter writer = new StreamWriter(tempSavePath, false))
                 {
-                    writer.Write(SiiNunitData.PrintOut(0));
+                    writer.Write(saveContent);
                 }
+
+                File.Copy(tempSavePath, SiiSavePath, true);
+                File.Delete(tempSavePath);
 
                 UpdateStatusBarMessage.ShowStatusMessage(SMStatus.Info, "message_file_saved");
                 

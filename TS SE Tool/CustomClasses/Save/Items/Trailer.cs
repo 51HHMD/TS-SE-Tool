@@ -46,6 +46,13 @@ namespace TS_SE_Tool.Save.Items
         internal uint       trip_time_min       { get; set; } = 0;
         internal SCS_Float  trip_time           { get; set; } = 0;
 
+        internal uint       trip_recuperation_kwh { get; set; } = 0;
+        internal SCS_Float  trip_recuperation   { get; set; } = 0;
+
+        internal SCS_String license_plate_type  { get; set; } = "";
+
+        internal SCS_Float  sliding_axle_offset { get; set; } = 0;
+
         #endregion
 
         internal Trailer()
@@ -168,13 +175,29 @@ namespace TS_SE_Tool.Save.Items
                         case var s when s.StartsWith("wheels_wear["):
                             wheels_wear.Add(dataLine);
                             break;
+
+                        case "trip_recuperation_kwh":
+                            trip_recuperation_kwh = uint.Parse(dataLine);
+                            break;
+
+                        case "trip_recuperation":
+                            trip_recuperation = dataLine;
+                            break;
+
+                        case "license_plate_type":
+                            license_plate_type = dataLine;
+                            break;
+
+                        case "sliding_axle_offset":
+                            sliding_axle_offset = dataLine;
+                            break;
                     }
 
                 }
                 catch (Exception ex)
                 {
                     Utilities.IO_Utilities.ErrorLogWriter(ex.Message + Environment.NewLine + this.GetType().Name.ToLower() + " | " + tagLine + " = " + dataLine);
-                    break;
+                    this.markUnparsed(tagLine);
                 }
             }
         }
@@ -210,18 +233,23 @@ namespace TS_SE_Tool.Save.Items
 
             returnSB.AppendLine(" trip_fuel_l: " + trip_fuel_l);
             returnSB.AppendLine(" trip_fuel: " + trip_fuel.ToString());
+            returnSB.AppendLine(" trip_recuperation_kwh: " + trip_recuperation_kwh);
+            returnSB.AppendLine(" trip_recuperation: " + trip_recuperation.ToString());
             returnSB.AppendLine(" trip_distance_km: " + trip_distance_km);
             returnSB.AppendLine(" trip_distance: " + trip_distance.ToString());
             returnSB.AppendLine(" trip_time_min: " + trip_time_min);
             returnSB.AppendLine(" trip_time: " + trip_time.ToString());
 
             returnSB.AppendLine(" license_plate: " + license_plate.ToString());
+            returnSB.AppendLine(" license_plate_type: " + license_plate_type.ToString());
 
             returnSB.AppendLine(" chassis_wear: " + chassis_wear.ToString());
 
             returnSB.AppendLine(" wheels_wear: " + wheels_wear.Count);
             for (int i = 0; i < wheels_wear.Count; i++)
                 returnSB.AppendLine(" wheels_wear[" + i + "]: " + wheels_wear[i].ToString());
+
+            returnSB.AppendLine(" sliding_axle_offset: " + sliding_axle_offset.ToString());
 
             returnSB.AppendLine("}");
 
