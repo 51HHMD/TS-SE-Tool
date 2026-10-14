@@ -33,6 +33,9 @@ namespace TS_SE_Tool
         [STAThread]
         static void Main()
         {
+            // Resources, config and logs use relative paths - always work from the program folder
+            System.IO.Directory.SetCurrentDirectory(AppDomain.CurrentDomain.BaseDirectory);
+
             // Add the event handler for handling UI thread exceptions to the event
             Application.ThreadException += new ThreadExceptionEventHandler(UIThreadException);
 
