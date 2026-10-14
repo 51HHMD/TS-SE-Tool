@@ -384,26 +384,22 @@ namespace TS_SE_Tool
                     {
                         case 0:
                             partType = "engine";
-                            _wear = SelectedUserCompanyTruck.TruckMainData.engine_wear;
                             break;
                         case 1:
                             partType = "transmission";
-                            _wear = SelectedUserCompanyTruck.TruckMainData.transmission_wear;
                             break;
                         case 2:
                             partType = "chassis";
-                            _wear = SelectedUserCompanyTruck.TruckMainData.chassis_wear;
                             break;
                         case 3:
                             partType = "cabin";
-                            _wear = SelectedUserCompanyTruck.TruckMainData.cabin_wear;
                             break;
                         case 4:
                             partType = "tire";
-                            if (SelectedUserCompanyTruck.TruckMainData.wheels_wear.Count > 0)
-                                _wear = SelectedUserCompanyTruck.TruckMainData.wheels_wear.Sum() / SelectedUserCompanyTruck.TruckMainData.wheels_wear.Count;
                             break;
                     }
+
+                    _wear = SelectedUserCompanyTruck.TruckMainData.GetWear(partType);
                 }
                 catch
                 {
@@ -741,11 +737,8 @@ namespace TS_SE_Tool
             if (SelectedUserCompanyTruck == null)
                 return;
 
-            SelectedUserCompanyTruck.TruckMainData.engine_wear = 0;
-            SelectedUserCompanyTruck.TruckMainData.transmission_wear = 0;
-            SelectedUserCompanyTruck.TruckMainData.chassis_wear = 0;
-            SelectedUserCompanyTruck.TruckMainData.cabin_wear = 0;
-            SelectedUserCompanyTruck.TruckMainData.wheels_wear = new List<Save.DataFormat.SCS_Float>();
+            foreach (string part in new string[] { "engine", "transmission", "chassis", "cabin", "tire" })
+                SelectedUserCompanyTruck.TruckMainData.Repair(part);
 
             for (byte i = 0; i < 5; i++)
                 UpdateTruckPanelProgressBar(i);
@@ -763,24 +756,10 @@ namespace TS_SE_Tool
             if (SelectedUserCompanyTruck == null)
                 return;
 
-            switch (bi)
-            {
-                case 0:
-                    SelectedUserCompanyTruck.TruckMainData.engine_wear = 0;
-                    break;
-                case 1:
-                    SelectedUserCompanyTruck.TruckMainData.transmission_wear = 0;
-                    break;
-                case 2:
-                    SelectedUserCompanyTruck.TruckMainData.chassis_wear = 0;
-                    break;
-                case 3:
-                    SelectedUserCompanyTruck.TruckMainData.cabin_wear = 0;
-                    break;
-                case 4:
-                    SelectedUserCompanyTruck.TruckMainData.wheels_wear = new List<Save.DataFormat.SCS_Float>();
-                    break;
-            }
+            string[] parts = { "engine", "transmission", "chassis", "cabin", "tire" };
+
+            if (bi < parts.Length)
+                SelectedUserCompanyTruck.TruckMainData.Repair(parts[bi]);
 
             UpdateTruckPanelProgressBar(bi);
             CheckTruckRepair();

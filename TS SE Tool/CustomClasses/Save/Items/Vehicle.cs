@@ -72,6 +72,16 @@ namespace TS_SE_Tool.Save.Items
 
         internal SCS_Float sliding_axle_offset { get; set; } = 0;
 
+        internal SCS_Float engine_wear_unfixable { get; set; } = 0;
+
+        internal SCS_Float transmission_wear_unfixable { get; set; } = 0;
+
+        internal SCS_Float cabin_wear_unfixable { get; set; } = 0;
+
+        internal SCS_Float chassis_wear_unfixable { get; set; } = 0;
+
+        internal List<SCS_Float> wheels_wear_unfixable { get; set; } = new List<SCS_Float>();
+
         #endregion
         internal Vehicle()
         {
@@ -303,6 +313,42 @@ namespace TS_SE_Tool.Save.Items
                                 sliding_axle_offset = dataLine;
                                 break;
                             }
+
+                        case "engine_wear_unfixable":
+                            {
+                                engine_wear_unfixable = dataLine;
+                                break;
+                            }
+
+                        case "transmission_wear_unfixable":
+                            {
+                                transmission_wear_unfixable = dataLine;
+                                break;
+                            }
+
+                        case "cabin_wear_unfixable":
+                            {
+                                cabin_wear_unfixable = dataLine;
+                                break;
+                            }
+
+                        case "chassis_wear_unfixable":
+                            {
+                                chassis_wear_unfixable = dataLine;
+                                break;
+                            }
+
+                        case "wheels_wear_unfixable":
+                            {
+                                wheels_wear_unfixable.Capacity = int.Parse(dataLine);
+                                break;
+                            }
+
+                        case var s when s.StartsWith("wheels_wear_unfixable["):
+                            {
+                                wheels_wear_unfixable.Add(dataLine);
+                                break;
+                            }
                     }
                 }
                 catch (Exception ex)
@@ -324,6 +370,10 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" engine_wear: " + engine_wear.ToString());
             returnSB.AppendLine(" transmission_wear: " + transmission_wear.ToString());
             returnSB.AppendLine(" cabin_wear: " + cabin_wear.ToString());
+
+            returnSB.AppendLine(" engine_wear_unfixable: " + engine_wear_unfixable.ToString());
+            returnSB.AppendLine(" transmission_wear_unfixable: " + transmission_wear_unfixable.ToString());
+            returnSB.AppendLine(" cabin_wear_unfixable: " + cabin_wear_unfixable.ToString());
 
             returnSB.AppendLine(" fuel_relative: " + fuel_relative.ToString());
 
@@ -364,10 +414,15 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" license_plate_type: " + license_plate_type.ToString());
 
             returnSB.AppendLine(" chassis_wear: " + chassis_wear.ToString());
+            returnSB.AppendLine(" chassis_wear_unfixable: " + chassis_wear_unfixable.ToString());
 
             returnSB.AppendLine(" wheels_wear: " + wheels_wear.Count);
             for (int i = 0; i < wheels_wear.Count; i++)
                 returnSB.AppendLine(" wheels_wear[" + i + "]: " + wheels_wear[i].ToString());
+
+            returnSB.AppendLine(" wheels_wear_unfixable: " + wheels_wear_unfixable.Count);
+            for (int i = 0; i < wheels_wear_unfixable.Count; i++)
+                returnSB.AppendLine(" wheels_wear_unfixable[" + i + "]: " + wheels_wear_unfixable[i].ToString());
 
             returnSB.AppendLine(" sliding_axle_offset: " + sliding_axle_offset.ToString());
 
@@ -379,6 +434,62 @@ namespace TS_SE_Tool.Save.Items
             this.removeWritenBlock(_nameless);
 
             return returnString;
+        }
+
+        //Total wear as shown in game (fixable + unfixable), 0..1
+        internal float GetWear(string _part)
+        {
+            switch (_part)
+            {
+                case "engine":
+                    return Math.Min(1f, engine_wear + engine_wear_unfixable);
+                case "transmission":
+                    return Math.Min(1f, transmission_wear + transmission_wear_unfixable);
+                case "chassis":
+                    return Math.Min(1f, chassis_wear + chassis_wear_unfixable);
+                case "cabin":
+                    return Math.Min(1f, cabin_wear + cabin_wear_unfixable);
+                case "tire":
+                    return Math.Min(1f, Average(wheels_wear) + Average(wheels_wear_unfixable));
+            }
+
+            return 0;
+        }
+
+        //Repair part completely, including unfixable wear
+        internal void Repair(string _part)
+        {
+            switch (_part)
+            {
+                case "engine":
+                    engine_wear = 0;
+                    engine_wear_unfixable = 0;
+                    break;
+                case "transmission":
+                    transmission_wear = 0;
+                    transmission_wear_unfixable = 0;
+                    break;
+                case "chassis":
+                    chassis_wear = 0;
+                    chassis_wear_unfixable = 0;
+                    break;
+                case "cabin":
+                    cabin_wear = 0;
+                    cabin_wear_unfixable = 0;
+                    break;
+                case "tire":
+                    //keep one entry per wheel
+                    for (int i = 0; i < wheels_wear.Count; i++)
+                        wheels_wear[i] = 0;
+                    for (int i = 0; i < wheels_wear_unfixable.Count; i++)
+                        wheels_wear_unfixable[i] = 0;
+                    break;
+            }
+        }
+
+        internal static float Average(List<SCS_Float> _values)
+        {
+            return _values.Count > 0 ? _values.Sum(x => (float)x) / _values.Count : 0;
         }
     }
 

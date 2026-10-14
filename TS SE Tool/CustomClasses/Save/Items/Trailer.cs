@@ -53,6 +53,10 @@ namespace TS_SE_Tool.Save.Items
 
         internal SCS_Float  sliding_axle_offset { get; set; } = 0;
 
+        internal SCS_Float  trailer_body_wear_unfixable { get; set; } = 0;
+        internal SCS_Float  chassis_wear_unfixable { get; set; } = 0;
+        internal List<SCS_Float> wheels_wear_unfixable { get; set; } = new List<SCS_Float>();
+
         #endregion
 
         internal Trailer()
@@ -191,6 +195,22 @@ namespace TS_SE_Tool.Save.Items
                         case "sliding_axle_offset":
                             sliding_axle_offset = dataLine;
                             break;
+
+                        case "trailer_body_wear_unfixable":
+                            trailer_body_wear_unfixable = dataLine;
+                            break;
+
+                        case "chassis_wear_unfixable":
+                            chassis_wear_unfixable = dataLine;
+                            break;
+
+                        case "wheels_wear_unfixable":
+                            wheels_wear_unfixable.Capacity = int.Parse(dataLine);
+                            break;
+
+                        case var s when s.StartsWith("wheels_wear_unfixable["):
+                            wheels_wear_unfixable.Add(dataLine);
+                            break;
                     }
 
                 }
@@ -223,6 +243,7 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" is_private: " + is_private.ToString().ToLower());
 
             returnSB.AppendLine(" trailer_body_wear: " + trailer_body_wear.ToString());
+            returnSB.AppendLine(" trailer_body_wear_unfixable: " + trailer_body_wear_unfixable.ToString());
 
             returnSB.AppendLine(" accessories: " + accessories.Count);
             for (int i = 0; i < accessories.Count; i++)
@@ -244,10 +265,15 @@ namespace TS_SE_Tool.Save.Items
             returnSB.AppendLine(" license_plate_type: " + license_plate_type.ToString());
 
             returnSB.AppendLine(" chassis_wear: " + chassis_wear.ToString());
+            returnSB.AppendLine(" chassis_wear_unfixable: " + chassis_wear_unfixable.ToString());
 
             returnSB.AppendLine(" wheels_wear: " + wheels_wear.Count);
             for (int i = 0; i < wheels_wear.Count; i++)
                 returnSB.AppendLine(" wheels_wear[" + i + "]: " + wheels_wear[i].ToString());
+
+            returnSB.AppendLine(" wheels_wear_unfixable: " + wheels_wear_unfixable.Count);
+            for (int i = 0; i < wheels_wear_unfixable.Count; i++)
+                returnSB.AppendLine(" wheels_wear_unfixable[" + i + "]: " + wheels_wear_unfixable[i].ToString());
 
             returnSB.AppendLine(" sliding_axle_offset: " + sliding_axle_offset.ToString());
 
@@ -258,6 +284,50 @@ namespace TS_SE_Tool.Save.Items
             this.removeWritenBlock(_nameless);
 
             return returnString;
+        }
+
+        //Total wear as shown in game (fixable + unfixable), 0..1
+        internal float GetWear(string _part)
+        {
+            switch (_part)
+            {
+                case "cargo":
+                    return Math.Min(1f, cargo_damage);
+                case "body":
+                    return Math.Min(1f, trailer_body_wear + trailer_body_wear_unfixable);
+                case "chassis":
+                    return Math.Min(1f, chassis_wear + chassis_wear_unfixable);
+                case "tire":
+                    return Math.Min(1f, Vehicle.Average(wheels_wear) + Vehicle.Average(wheels_wear_unfixable));
+            }
+
+            return 0;
+        }
+
+        //Repair part completely, including unfixable wear
+        internal void Repair(string _part)
+        {
+            switch (_part)
+            {
+                case "cargo":
+                    cargo_damage = 0;
+                    break;
+                case "body":
+                    trailer_body_wear = 0;
+                    trailer_body_wear_unfixable = 0;
+                    break;
+                case "chassis":
+                    chassis_wear = 0;
+                    chassis_wear_unfixable = 0;
+                    break;
+                case "tire":
+                    //keep one entry per wheel
+                    for (int i = 0; i < wheels_wear.Count; i++)
+                        wheels_wear[i] = 0;
+                    for (int i = 0; i < wheels_wear_unfixable.Count; i++)
+                        wheels_wear_unfixable[i] = 0;
+                    break;
+            }
         }
 
     }

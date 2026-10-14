@@ -367,22 +367,19 @@ namespace TS_SE_Tool
                     {
                         case 0:
                             partType = "cargo";
-                            _wear = SelectedUserCompanyTrailer.TrailerMainData.cargo_damage;
-                            break;                            
+                            break;
                         case 1:
                             partType = "body";
-                            _wear = SelectedUserCompanyTrailer.TrailerMainData.trailer_body_wear;
                             break;
                         case 2:
                             partType = "chassis";
-                            _wear = SelectedUserCompanyTrailer.TrailerMainData.chassis_wear;
                             break;
                         case 3:
                             partType = "tire";
-                            if (SelectedUserCompanyTrailer.TrailerMainData.wheels_wear.Count > 0)
-                                _wear = SelectedUserCompanyTrailer.TrailerMainData.wheels_wear.Sum() / SelectedUserCompanyTrailer.TrailerMainData.wheels_wear.Count;
                             break;
                     }
+
+                    _wear = SelectedUserCompanyTrailer.TrailerMainData.GetWear(partType);
                 }
                 catch
                 {
@@ -450,6 +447,15 @@ namespace TS_SE_Tool
             }
         }
 
+        //Translated cargo name, or readable id ("apples_c" -> "Apples C") for cargo missing in translation
+        private string GetCargoDisplayName(string _cargo)
+        {
+            if (CargoLngDict.TryGetValue(_cargo, out string value) && !string.IsNullOrEmpty(value))
+                return value;
+
+            return CultureInfo.InvariantCulture.TextInfo.ToTitleCase(_cargo.Replace('_', ' '));
+        }
+
         private string SetTrailerPartLabelText(string _trailerNameless, Save.Items.Trailer _trailerMainData, string _partType)
         {
             string pnlText = "";
@@ -457,20 +463,16 @@ namespace TS_SE_Tool
 
             if (_partType == "cargo")
             {
-                //player_job
-                if (SiiNunitData.Player.assigned_trailer == _trailerNameless)
+                //player_job - 1.60+ saves keep the job trailer only in player_job
+                bool isPlayerJobTrailer = SiiNunitData.Player_Job != null && SiiNunitData.Player_Job.company_trailer == _trailerNameless;
+
+                if (SiiNunitData.Player.assigned_trailer == _trailerNameless || isPlayerJobTrailer)
                 {
                     if (SiiNunitData.Player_Job != null)
                     {
                         string tmpCargo = SiiNunitData.Player_Job.cargo.Split(new char[] { '.' }).Last();
 
-                        if (CargoLngDict.TryGetValue(tmpCargo, out string value))
-                        {
-                            if (!string.IsNullOrEmpty(value))
-                                pnlText = value;
-                            else
-                                pnlText = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value);
-                        }
+                        pnlText = GetCargoDisplayName(tmpCargo);
                     }
                     else
                     {
@@ -486,13 +488,7 @@ namespace TS_SE_Tool
                     {
                         string tmpCargo = tmp[0].DriverJob.Cargo;
 
-                        if (CargoLngDict.TryGetValue(tmpCargo, out string value))
-                        {
-                            if (!string.IsNullOrEmpty(value))
-                                pnlText = value;
-                            else
-                                pnlText = CultureInfo.InvariantCulture.TextInfo.ToTitleCase(value);
-                        }
+                        pnlText = GetCargoDisplayName(tmpCargo);
                     }
                     else
                     {
@@ -757,10 +753,8 @@ namespace TS_SE_Tool
 
             Save.Items.Trailer selectedTrailerData = UserTrailerDictionary[trailerNameless].TrailerMainData;
 
-            selectedTrailerData.cargo_damage = 0;
-            selectedTrailerData.trailer_body_wear = 0;
-            selectedTrailerData.chassis_wear = 0;
-            selectedTrailerData.wheels_wear = new List<Save.DataFormat.SCS_Float>();
+            foreach (string part in new string[] { "cargo", "body", "chassis", "tire" })
+                selectedTrailerData.Repair(part);
 
             slaveTrailerNameless = UserTrailerDictionary[trailerNameless].TrailerMainData.slave_trailer;
 
@@ -802,28 +796,15 @@ namespace TS_SE_Tool
 
             trailerNameless = comboBoxUserTrailerCompanyTrailers.SelectedValue.ToString();
 
-            Save.Items.Trailer selectedTrailerData = UserTrailerDictionary[trailerNameless].TrailerMainData;
+            string[] parts = { "cargo", "body", "chassis", "tire" };
 
             StartTrailerParts:
 
-            switch (buttonIndex)
-            {
-                case 0:
-                    selectedTrailerData.cargo_damage = 0;
-                    break;
+            //take data of each trailer in chain, not only the first one
+            Save.Items.Trailer selectedTrailerData = UserTrailerDictionary[trailerNameless].TrailerMainData;
 
-                case 1:
-                    selectedTrailerData.trailer_body_wear = 0;
-                    break;
-
-                case 2:
-                    selectedTrailerData.chassis_wear = 0;
-                    break;
-
-                case 3:
-                    selectedTrailerData.wheels_wear = new List<Save.DataFormat.SCS_Float>();
-                    break;
-            }
+            if (buttonIndex < parts.Length)
+                selectedTrailerData.Repair(parts[buttonIndex]);
 
             slaveTrailerNameless = UserTrailerDictionary[trailerNameless].TrailerMainData.slave_trailer;
 
